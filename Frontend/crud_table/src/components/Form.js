@@ -1,6 +1,6 @@
 import React from 'react'
 import { useState } from 'react';
-// import {Navigate, useNavigate} from 'react-router-dom'
+import { useNavigate} from 'react-router-dom'
 
 function Form() {
     const [formData, setFormData] =useState({
@@ -10,8 +10,9 @@ function Form() {
       })
       
       const [errormsg,setErrorMsg] =useState("")
+      const [apiFormRes,setApiFormRes] =useState({})
 
-    //   const Navigate =useNavigate()
+      const navigate =useNavigate()
       
       // input handle function
       const handleChange = (e) => {
@@ -25,25 +26,23 @@ function Form() {
       // form sumbition handler function
       const formDataHandler = async(e)=>{
         e.preventDefault()
-        console.log(formData)
-      
-        try {
+         try {
           // Send data to backend
-          const response = await fetch("http://localhost:5000/api/transactions", {
+        await fetch('http://localhost:5000/api/transactions', {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify(formData),
-          });
-      console.log(response)
-          if (response.status==='200') {
-            // Navigate("/table")
-            // setFormData({ amount: response.data.amount, transactionType: response.data.transactionType, reason: response.data.reason }); 
-      
-          } else {
-            setErrorMsg("Failed to submit transaction.");
-          }
+          }) // api for the get request
+          .then(response => response.json())
+          .then(apiRes => setApiFormRes(apiRes));
+          console.log(apiFormRes.status_code,"rrrrr")
+            if(apiFormRes.status_code===200){
+              navigate('/table')
+              console.log('after respose....')
+            }
+
         } 
         catch (error) {
           setErrorMsg("Error submitting transaction:");

@@ -13,15 +13,15 @@ dotenv.config();
 const app = express();
 
 // Middleware
-const corsOptions = {
-    origin: ['http://localhost:3000'], // Frontend URL
-    // methods: 'GET,POST,PUT,DELETE',
-    // allowedHeaders: ['Content-Type', 'Authorization'], // Add headers as needed
-};
+// const corsOptions = {
+//     origin: ['http://localhost:3000'], // Frontend URL
+//     methods: 'GET,POST,PUT,DELETE',
+//     allowedHeaders: ['Content-Type', 'application/json'], // Add headers as needed
+// };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
-// app.use(cors()); 
+app.use(cors()); 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -38,25 +38,63 @@ app.get('/', (req, res) => {
 // Example route to add data to MongoDB
 app.post('/api/transactions',  async(req, res) => {
     const  formData  = req.body;
-console.log(formData,"=====formdata====")
     try {
         const newEntry = new formDB({ amount:formData.amount, transactionType:formData.transactionType,reason:formData.reason });
-         await newEntry.save();
-        res.status(200).json({ message: 'Data added successfully', data: newEntry });
+        await newEntry.save();
+        res.status(200).json({ status_code:200, message: 'Data added successfully', data: newEntry });
     } catch (error) {
         res.status(500).json({ message: 'Error adding data', error: error.message });
     }
 });
 
-// Example route to fetch data from MongoDB
+//  route to fetch data from MongoDB
 app.get('/api/data', async (req, res) => {
     try {
-        const data = await Example.find();
-        res.status(200).json(data);
+        const data = await formDB.find();
+        res.status(200).json({ status_code:200, message: 'Data added successfully',data:data});
     } catch (error) {
         res.status(500).json({ message: 'Error fetching data', error: error.message });
     }
 });
+
+app.delete('/api/:deleteData', async (req, res) => {
+    const daleteRow = req.params.deleteData
+    console.log(daleteRow,"pppppp")
+    try {
+        // Check if the document exists
+        const document = await formDB.findById(daleteRow);
+        if (!document) {
+            return res.status(404).json({ message: 'Data not found' });
+        }
+
+        // Delete the document
+        await formDB.findByIdAndDelete(daleteRow);
+
+        res.status(200).json({status_code:200, message: 'Data UPDATED successfully', data: document });
+    } catch (error) {
+        console.error('Error deleting data:', error);
+        res.status(500).json({ message: 'Error deleting data', error: error.message });
+    }
+});
+
+app.put('/api/update',  async(req, res) => {
+    const  formData  = req.body;
+    try {
+        const document = await formDB.findById(formData._id);
+      
+        if (!document) {
+            return res.status(404).json({ message: 'Data not found' });
+        }
+        await formDB.findByIdAndUpdate({_id: formData._id, amount:formData.amount, transactionType:formData.transactionType,reason:formData.reason });
+console.log(formData,"=====",document)
+       
+        res.status(200).json({ status_code:200, message: 'Data updated successfully' });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Error in update data', error: error.message });
+    }
+});
+
 
 // // Error handling middleware
 // app.use((err, req, res, next) => {
