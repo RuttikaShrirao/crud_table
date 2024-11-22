@@ -31,7 +31,6 @@ connectDB();
 console.log('db connect..', process.env.MONGO_URI)
 // Routes
 app.get('/', (req, res) => {
-    console.log("get req succedd")
     res.send({status:200,msg:'BACKEND CONNECTED...'});
 });
 
@@ -57,9 +56,8 @@ app.get('/api/data', async (req, res) => {
     }
 });
 
-app.delete('/api/:deleteData', async (req, res) => {
+app.delete(`/api/:deleteData`, async (req, res) => {
     const daleteRow = req.params.deleteData
-    console.log(daleteRow,"pppppp")
     try {
         // Check if the document exists
         const document = await formDB.findById(daleteRow);
@@ -77,6 +75,24 @@ app.delete('/api/:deleteData', async (req, res) => {
     }
 });
 
+
+app.get('/api/:update_id',  async(req, res) => {
+    const  edit_id  = req.params.update_id;
+    try {
+        const document = await formDB.findById(edit_id);
+      
+        if (!document) {
+            return res.status(404).json({ message: 'Data not found' });
+        }
+       
+        res.status(200).json({ status_code:200, message: 'Data updated successfully', document:document});
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Error in update data', error: error.message });
+    }
+});
+
+
 app.put('/api/update',  async(req, res) => {
     const  formData  = req.body;
     try {
@@ -85,8 +101,10 @@ app.put('/api/update',  async(req, res) => {
         if (!document) {
             return res.status(404).json({ message: 'Data not found' });
         }
-        await formDB.findByIdAndUpdate({_id: formData._id, amount:formData.amount, transactionType:formData.transactionType,reason:formData.reason });
-console.log(formData,"=====",document)
+
+    
+        await formDB.findByIdAndUpdate(document._id,{ amount:formData.amount, transactionType:formData.transactionType,reason:formData.reason });
+
        
         res.status(200).json({ status_code:200, message: 'Data updated successfully' });
     } catch (error) {
@@ -97,10 +115,10 @@ console.log(formData,"=====",document)
 
 
 // // Error handling middleware
-// app.use((err, req, res, next) => {
-//     console.error(err.stack);
-//     res.status(500).send('Something went wrong!');
-// });
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something went wrong!');
+});
 
 // Define the port
 const PORT = process.env.PORT || 5000;

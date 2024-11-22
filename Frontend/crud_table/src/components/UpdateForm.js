@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-function Form() {
+function UpdateForm() {
   const [formData, setFormData] = useState({
     amount: "",
     transactionType: "",
@@ -13,6 +14,35 @@ function Form() {
 
   const navigate = useNavigate();
 
+  //   params
+  let { update_id } = useParams();
+
+  // getting data from backend
+  const getUpdateDataHandler = () => {
+    try {
+      fetch(`http://localhost:5000/api/${update_id}`) // api for the get request
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error();
+          }
+          return response.json();
+        })
+        .then((apiRes) => {
+          setFormData(apiRes.document);
+          //   apiRes.status_code === 200 ? navigate("/table") : navigate("/");
+        })
+        .catch((err) => {
+          setErrorMsg("Error submitting transaction:");
+        });
+    } catch (error) {
+      setErrorMsg("Error submitting transaction:");
+    }
+  };
+
+  useEffect(() => {
+    getUpdateDataHandler();
+  }, []);
+
   // input handle function
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,20 +51,19 @@ function Form() {
       [name]: value,
     }));
   };
-
   // form sumbition handler function
   const formDataHandler = (e) => {
     e.preventDefault();
     try {
-      // Send data to backend
-      fetch("http://localhost:5000/api/transactions", {
-        method: "POST",
+      //   Send data to backend
+      fetch(`http://localhost:5000/api/update`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
-      }) // api for the get request
-        .then((response) =>{
+      })
+        .then((response) => {
           if (!response.ok) {
             throw new Error();
           }
@@ -42,14 +71,12 @@ function Form() {
         })
         .then((apiRes) => {
           apiRes.status_code === 200 ? navigate("/table") : navigate("/");
-        }).catch((err)=>{
+        })
+        .catch((err) => {
           setErrorMsg("Error submitting transaction:");
-
         });
-
-     
     } catch (error) {
-      console.log(error,"===err")
+      console.log(error, "===err");
       setErrorMsg("Error submitting transaction:");
     }
   };
@@ -103,7 +130,7 @@ function Form() {
 
         <div className="d-grid">
           <button type="submit" className="btn btn-primary">
-            Submit
+          Edit
           </button>
         </div>
         <p>{errormsg}</p>
@@ -112,4 +139,4 @@ function Form() {
   );
 }
 
-export default Form;
+export default UpdateForm;
